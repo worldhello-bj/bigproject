@@ -1,0 +1,58 @@
+{
+  "lazyCodeLoading": "requiredComponents",
+  "pages": [
+    "pages/index/index",
+    "pages/community/index",
+    "pages/script-library/index",
+    "pages/profile/index",
+    "pages/chat/index",
+    "pages/camera/index",
+    "pages/result/index",
+    "pages/admin/index",
+    "pages/welcome/index"
+  ],
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#1d4ed8",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/community/index",
+        "text": "社区"
+      },
+      {
+        "pagePath": "pages/script-library/index",
+        "text": "剧本库"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "window": {
+    "navigationBarTitleText": "CityQuest AI",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f7fa",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于判断你是否到达地标点"
+    },
+    "scope.camera": {
+      "desc": "用于拍摄打卡照片"
+    },
+    "scope.writePhotosAlbum": {
+      "desc": "用于保存打卡合影到相册"
+    }
+  }
+}

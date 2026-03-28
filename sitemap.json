@@ -1,0 +1,9 @@
+{
+  "desc": "CityQuest AI sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

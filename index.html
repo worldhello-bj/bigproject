@@ -1,0 +1,370 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CityQuest AI Web</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <main class="main">
+      <section id="page-home" class="page active page-home-map">
+        <div class="home-map-shell">
+          <div id="home-map" class="axis-map axis-map-fullscreen" aria-label="中轴线主地图"></div>
+          <div class="home-map-hud">
+            <div class="home-map-hud-top">
+              <h2>中轴主地图</h2>
+              <button id="btn-abort-home-script" class="btn-text home-map-abort hidden" type="button">中止剧本</button>
+            </div>
+            <p id="home-script-text" class="muted"></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-community" class="page">
+        <div class="community-shell">
+          <div class="community-head">
+            <h2 class="community-title">社区</h2>
+            <button class="btn-text community-more" type="button" aria-label="更多">⋯</button>
+          </div>
+          <div id="community-feed" class="community-body"></div>
+        </div>
+      </section>
+
+      <section id="page-scripts" class="page">
+        <div class="script-library-shell">
+          <div class="script-library-topbar">
+            <h2 class="script-library-title">剧本库</h2>
+            <button class="btn-text script-library-search" type="button" aria-label="搜索">⌕</button>
+          </div>
+
+          <div class="script-library-filterbar">
+            <button class="script-filter-chip active" type="button">代入感</button>
+            <button class="script-filter-chip" type="button">硬核推理</button>
+            <button class="script-filter-chip" type="button">古风悲歌</button>
+            <button class="script-filter-chip" type="button">卷轴叙事</button>
+          </div>
+
+          <div id="script-library-feedback" class="script-library-feedback hidden" aria-live="polite"></div>
+
+          <div id="script-list" class="script-card-grid"></div>
+
+          <div class="script-library-footer">
+            <p class="script-library-note">当前开放剧本将作为首页与主线对话的生效剧本。</p>
+            <button id="btn-go-home-by-script" class="btn primary script-library-cta">用当前剧本去首页</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-profile" class="page">
+        <div class="profile-shell">
+          <div class="profile-topbar">
+            <h2 class="profile-title">我的</h2>
+            <button class="btn-text profile-more" type="button" aria-label="更多">⋯</button>
+          </div>
+
+          <section class="profile-hero-card">
+            <div class="profile-hero-main">
+              <div class="profile-avatar">游</div>
+              <div class="profile-hero-meta">
+                <h3 class="profile-name">中轴行旅人</h3>
+                <p class="profile-id">旅人编号：CQ-1024</p>
+                <p id="profile-script-text" class="profile-script-text"></p>
+              </div>
+            </div>
+            <div class="profile-hero-stats">
+              <div class="profile-stat">
+                <span class="profile-stat-num">12</span>
+                <span class="profile-stat-label">已解锁站点</span>
+              </div>
+              <div class="profile-stat">
+                <span class="profile-stat-num">3</span>
+                <span class="profile-stat-label">完成结局</span>
+              </div>
+              <div class="profile-stat">
+                <span class="profile-stat-num">28</span>
+                <span class="profile-stat-label">旅行收藏</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-panel">
+            <div class="profile-panel-head">
+              <h3>我的订单</h3>
+              <span>查看全部</span>
+            </div>
+            <div class="profile-icon-grid">
+              <div class="profile-icon-entry">
+                <div class="profile-icon-badge">票</div>
+                <span>待出行</span>
+              </div>
+              <div class="profile-icon-entry">
+                <div class="profile-icon-badge">券</div>
+                <span>待使用</span>
+              </div>
+              <div class="profile-icon-entry">
+                <div class="profile-icon-badge">礼</div>
+                <span>待收货</span>
+              </div>
+              <div class="profile-icon-entry">
+                <div class="profile-icon-badge">售</div>
+                <span>售后</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-panel">
+            <div class="profile-panel-head">
+              <h3>旅行服务</h3>
+              <span>常用功能</span>
+            </div>
+            <div class="profile-menu-list">
+              <div class="profile-menu-item">
+                <div>
+                  <strong>我的行程</strong>
+                  <p>查看中轴夜游路线、打卡记录与续行进度</p>
+                </div>
+                <span>›</span>
+              </div>
+              <div class="profile-menu-item">
+                <div>
+                  <strong>收藏与攻略</strong>
+                  <p>保存的剧本、论坛帖子与路线心得</p>
+                </div>
+                <span>›</span>
+              </div>
+              <div class="profile-menu-item">
+                <div>
+                  <strong>优惠券包</strong>
+                  <p>管理活动券、商城券与联名礼包权益</p>
+                </div>
+                <span>›</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-banner-card">
+            <div>
+              <p class="profile-banner-tag">旅行会员日</p>
+              <h3>中轴夜游联名权益已上线</h3>
+              <p>完成剧本路线可解锁限定票根、商城优惠与打卡边框。</p>
+            </div>
+            <button class="profile-banner-btn" type="button">立即查看</button>
+          </section>
+
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar">
+      <button class="tab active" data-tab="home"><span class="tab-ico">宫</span><span class="tab-label">首页</span></button>
+      <button class="tab" data-tab="community"><span class="tab-ico">众</span><span class="tab-label">社区</span></button>
+      <button class="tab" data-tab="scripts"><span class="tab-ico">卷</span><span class="tab-label">剧本</span></button>
+      <button class="tab" data-tab="profile"><span class="tab-ico">人</span><span class="tab-label">我的</span></button>
+    </nav>
+  </div>
+
+  <section id="overlay-welcome" class="overlay show">
+    <div class="modal welcome">
+      <img id="startup-hero-image" class="welcome-hero" alt="startup-hero" />
+      <div class="welcome-topbar">
+        <button id="btn-back-from-welcome" class="btn-text back-btn light" type="button">返回</button>
+      </div>
+      <div class="welcome-panel">
+      </div>
+      <nav class="startup-tabbar">
+        <button class="tab active" type="button" data-tab="home"><span class="tab-ico">宫</span><span class="tab-label">首页</span></button>
+        <button class="tab" type="button" data-tab="community"><span class="tab-ico">众</span><span class="tab-label">社区</span></button>
+        <button class="tab" type="button" data-tab="scripts"><span class="tab-ico">卷</span><span class="tab-label">剧本</span></button>
+        <button class="tab" type="button" data-tab="profile"><span class="tab-ico">人</span><span class="tab-label">我的</span></button>
+      </nav>
+    </div>
+  </section>
+
+  <section id="overlay-script-builder" class="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>AI 剧本生成</h3>
+        <button class="btn-text back-btn" data-close="script-builder">返回</button>
+      </div>
+      <p class="muted">也可以先选官方剧本，直接开始线性文游。</p>
+      <div id="builder-script-list" class="list"></div>
+      <div class="toolbar">
+        <button id="btn-start-selected-script" class="btn">使用所选剧本开始</button>
+      </div>
+      <p class="muted">输入关键词或你想要的剧本风格，AI 会随机规划去往地点。</p>
+      <input id="script-gen-input" type="text" placeholder="例：悬疑、宫廷、刺客、夜雨、追缉" />
+      <div class="toolbar">
+        <button id="btn-generate-script" class="btn primary">生成剧本</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="overlay-script-plan" class="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>剧本已生成</h3>
+        <button class="btn-text back-btn" data-close="script-plan">返回</button>
+      </div>
+      <p id="script-plan-title" class="item-title"></p>
+      <p id="script-plan-summary" class="muted"></p>
+      <p id="script-plan-opening" class="muted"></p>
+      <div id="script-plan-route" class="list"></div>
+      <div class="toolbar">
+        <button id="btn-start-generated-script" class="btn primary">开始文游</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="overlay-script-intro" class="overlay script-intro-overlay">
+    <div class="script-intro-shell">
+      <img class="script-intro-bg" src="./素材/主地图.png" alt="script-intro-bg" />
+      <div class="script-intro-mask"></div>
+      <button class="btn-text back-btn light script-intro-close" data-close="script-intro">返回</button>
+
+      <article class="script-intro-card">
+        <div class="script-intro-head">
+          <p class="script-intro-headline">角色介绍</p>
+          <p id="script-intro-role-name" class="script-intro-role-name"></p>
+        </div>
+
+        <img id="script-intro-portrait" class="script-intro-portrait" alt="script-role" />
+
+        <div class="script-intro-board">
+          <p id="script-intro-name" class="script-intro-script-name"></p>
+          <p id="script-intro-subtitle" class="script-intro-script-subtitle"></p>
+          <p id="script-intro-role-bio" class="script-intro-summary"></p>
+          <p id="script-intro-summary" class="script-intro-summary"></p>
+          <ul id="script-intro-points" class="script-intro-points"></ul>
+          <p id="script-intro-opening" class="script-intro-opening"></p>
+        </div>
+
+        <button id="btn-script-intro-start" class="script-intro-start" type="button">开始</button>
+      </article>
+    </div>
+  </section>
+
+  <section id="overlay-chat" class="overlay game-overlay">
+    <div class="modal game-modal">
+      <img id="chat-scene-bg" class="chat-scene-bg" alt="scene-bg" />
+      <div class="chat-scene-mask"></div>
+      <div class="vn-topbar">
+        <h3 id="chat-title" class="hidden">地标对话</h3>
+        <button class="btn-text back-btn light" data-close="chat">返回</button>
+        <p id="route-impact" class="vn-progress"></p>
+      </div>
+
+      <p id="chat-script-line" class="hidden"></p>
+      <p id="story-progress" class="hidden"></p>
+      <div id="story-grid" class="hidden"></div>
+      <div id="chat-messages" class="hidden"></div>
+
+      <div class="vn-choice-wrap">
+        <div id="chat-choices" class="choices vn-choices"></div>
+      </div>
+
+      <div id="chat-character" class="vn-dialogue-wrap">
+        <img id="chat-character-avatar" class="vn-portrait" alt="npc-avatar" />
+        <div class="vn-dialogue-card">
+          <p id="chat-character-name" class="vn-nameplate"></p>
+          <p id="chat-character-role" class="vn-role"></p>
+          <p id="chat-dialogue-text" class="vn-dialogue-text"></p>
+        </div>
+      </div>
+
+      <div class="vn-actions">
+        <button id="btn-check-arrival" class="btn">到达判定</button>
+        <button id="btn-go-camera" class="btn primary" disabled>拍照打卡</button>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="overlay-camera" class="overlay">
+    <div class="modal camera-modal">
+      <div class="modal-head">
+        <h3>拍照打卡</h3>
+        <button class="btn-text back-btn" data-close="camera">返回</button>
+      </div>
+      <div id="camera-wrap" class="camera-wrap">
+        <div class="camera-live-window">
+          <video id="camera-video" autoplay playsinline></video>
+        </div>
+        <img id="camera-frame" alt="frame" />
+      </div>
+      <p id="camera-tip" class="muted"></p>
+      <div class="toolbar camera-toolbar">
+        <button id="btn-capture" class="btn primary">拍照并合成</button>
+        <button id="btn-upload-photo" class="btn">上传图片合成</button>
+        <button id="btn-skip-camera" class="btn hidden">跳过拍照（测试）</button>
+      </div>
+      <input id="input-photo-file" type="file" accept="image/*" hidden />
+    </div>
+  </section>
+
+  <section id="overlay-result" class="overlay">
+    <div class="modal result-modal">
+      <div class="modal-head">
+        <h3>结果页</h3>
+        <button class="btn-text back-btn" data-close="result">返回</button>
+      </div>
+      <img id="result-bg" class="hero hidden" alt="bg" />
+      <div class="result-preview-shell">
+        <img id="result-image" class="preview" alt="result" />
+      </div>
+      <img id="result-coupon" class="coupon" alt="coupon" />
+      <div class="toolbar">
+        <button id="btn-save-result" class="btn primary">保存图片</button>
+        <button id="btn-restart" class="btn">继续推进</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="overlay-ending" class="overlay ending-overlay">
+    <div class="ending-shell">
+      <img id="ending-bg" class="ending-bg" alt="ending-bg" />
+      <div class="ending-mask"></div>
+      <article class="ending-paper">
+        <button class="btn-text back-btn ending-close" data-close="ending" type="button">关闭</button>
+        <h3 id="ending-title" class="ending-title"></h3>
+        <p id="ending-summary" class="ending-summary"></p>
+        <p id="ending-epilogue" class="ending-epilogue"></p>
+        <p id="ending-stats" class="ending-stats"></p>
+        <div class="toolbar ending-actions">
+          <button id="btn-ending-replay" class="btn primary" type="button">再启新卷</button>
+          <button id="btn-ending-home" class="btn" type="button">返回首页</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="overlay-dialog" class="overlay prompt-overlay">
+    <div id="prompt-card" class="prompt-card" role="dialog" aria-modal="true" aria-labelledby="prompt-title" aria-describedby="prompt-message">
+      <h3 id="prompt-title" class="prompt-title">提示</h3>
+      <p id="prompt-message" class="prompt-message"></p>
+      <div id="prompt-actions" class="toolbar prompt-actions">
+        <button id="btn-prompt-cancel" class="btn secondary hidden" type="button">取消</button>
+        <button id="btn-prompt-ok" class="btn primary" type="button">我知道了</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="overlay-admin" class="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>管理员素材上传</h3>
+        <button class="btn-text back-btn" data-close="admin">返回</button>
+      </div>
+      <div id="admin-assets" class="list"></div>
+      <button id="btn-reset-assets" class="btn danger">恢复默认素材</button>
+    </div>
+  </section>
+
+  <canvas id="compose-canvas" width="720" height="1280" hidden></canvas>
+  <script src="./app-web-pages.js"></script>
+  <script src="./app-web-storyconfig.js"></script>
+  <script src="./app-web-storygen.js"></script>
+  <script src="./app-web-storygame.js"></script>
+</body>
+</html>
