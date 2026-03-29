@@ -46,6 +46,14 @@
       "./素材/周边/微信图片_20260329094350_481_131.jpg",
       "./素材/周边/微信图片_20260329094352_482_131.jpg"
     ];
+    const scriptCoverImages = [
+      "./素材/剧本图/微信图片_20260329110823_524_131.png",
+      "./素材/剧本图/微信图片_20260329110842_525_131.png",
+      "./素材/剧本图/微信图片_20260329110904_526_131.png",
+      "./素材/剧本图/微信图片_20260329110920_527_131.png",
+      "./素材/剧本图/微信图片_20260329110937_528_131.png",
+      "./素材/剧本图/微信图片_20260329111007_529_131.png"
+    ];
     let communityView = "forum";
     let scriptFeedbackTimer = 0;
     let activeScriptFilter = "";
@@ -383,19 +391,21 @@
           score: "4.8",
           accent: "moon",
           palette: "teal",
+          image: scriptCoverImages[0],
           available: true,
           tags: ["代入感", "硬核推理", "卷轴叙事"],
           summary: primary.summary
         },
         {
           id: `${primary.id}_night`,
-          name: "大唐幻夜",
-          subtitle: "一夜宫阙追缉",
+          name: "宫阙夜缉",
+          subtitle: "残灯之下追缉旧案",
           difficulty: "困难",
           players: "7人",
           score: "4.8",
           accent: "tower",
           palette: "umber",
+          image: scriptCoverImages[1],
           available: false,
           tags: ["硬核推理", "卷轴叙事"],
           summary: "待开放推荐剧本"
@@ -409,45 +419,49 @@
           score: "4.8",
           accent: "plum",
           palette: "ivory",
+          image: scriptCoverImages[2],
           available: false,
           tags: ["古风悲歌", "卷轴叙事"],
           summary: "待开放推荐剧本"
         },
         {
           id: `${primary.id}_qin`,
-          name: "春梳生绛",
-          subtitle: "旧梦入画卷",
+          name: "大唐幻夜",
+          subtitle: "武侠唐传奇",
           difficulty: "困难",
           players: "7人",
           score: "4.8",
           accent: "lady",
           palette: "olive",
+          image: scriptCoverImages[3],
           available: false,
           tags: ["古风悲歌", "代入感"],
           summary: "待开放推荐剧本"
         },
         {
           id: `${primary.id}_fan`,
-          name: "大唐幻夜",
-          subtitle: "执扇问心",
+          name: "深门绛影",
+          subtitle: "悬疑惊悚卷",
           difficulty: "困难",
           players: "7人",
           score: "4.8",
           accent: "fan",
           palette: "sand",
+          image: scriptCoverImages[4],
           available: false,
           tags: ["代入感", "卷轴叙事"],
           summary: "待开放推荐剧本"
         },
         {
           id: `${primary.id}_red`,
-          name: "大唐幻夜",
-          subtitle: "深门绛影",
+          name: "春梳生绛",
+          subtitle: "旧梦入画卷",
           difficulty: "困难",
           players: "7人",
           score: "4.8",
           accent: "door",
           palette: "red",
+          image: scriptCoverImages[5],
           available: false,
           tags: ["硬核推理", "古风悲歌"],
           summary: "待开放推荐剧本"
@@ -482,6 +496,7 @@
         card.className = `script-card${isActive ? " active" : ""}${item.available ? "" : " locked"}`;
         card.dataset.palette = item.palette;
         card.dataset.accent = item.accent;
+        if (item.image) card.classList.add("has-cover-image");
         card.setAttribute("aria-label", item.available ? item.name : `${item.name}，暂未开放`);
 
         if (item.available) {
@@ -498,17 +513,18 @@
 
         card.innerHTML = `
           <div class="script-card-cover">
+            ${item.image ? `<img class="script-card-cover-image" src="${item.image}" alt="${item.name}封面" />` : ""}
             <div class="script-card-cover-art">
               <span class="script-card-cover-glow"></span>
               <span class="script-card-cover-ridge"></span>
               <span class="script-card-cover-emblem"></span>
             </div>
-            <div class="script-card-cover-label">
-              <h3 class="script-card-cover-title">${item.name}</h3>
-              <p class="script-card-cover-subtitle">${item.subtitle}</p>
-            </div>
           </div>
           <div class="script-card-body">
+            <div class="script-card-head">
+              <h3 class="script-card-title">${item.name}</h3>
+              <p class="script-card-subtitle">${item.subtitle}</p>
+            </div>
             <div class="script-card-status">${item.available ? "可游玩" : "待开放"}</div>
             <div class="script-card-meta">
               <div class="script-card-meta-row">

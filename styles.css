@@ -933,6 +933,17 @@ h3 {
   isolation: isolate;
 }
 
+.script-card-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  filter: sepia(0.08) saturate(0.96) contrast(1.02);
+}
+
 .script-card-cover::before {
   content: "";
   position: absolute;
@@ -942,13 +953,13 @@ h3 {
     linear-gradient(180deg, rgba(255, 247, 229, 0.08) 0%, rgba(24, 16, 10, 0.14) 100%);
   mix-blend-mode: screen;
   opacity: 0.9;
-  z-index: 0;
+  z-index: 1;
 }
 
 .script-card-cover-art {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
 }
 
 .script-card-cover-label {
@@ -1084,6 +1095,34 @@ h3 {
   border-radius: 6px;
   background: linear-gradient(180deg, #8fb59d 0%, #678a77 100%);
   box-shadow: 0 1px 0 rgba(56, 80, 69, 0.55);
+}
+
+.script-card.has-cover-image .script-card-cover::before {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 243, 216, 0.12) 0 10%, transparent 11%),
+    linear-gradient(180deg, rgba(18, 12, 8, 0.08) 0%, rgba(18, 12, 8, 0.22) 100%);
+  mix-blend-mode: normal;
+  opacity: 1;
+}
+
+.script-card.has-cover-image .script-card-cover-art::before {
+  opacity: 0.46;
+}
+
+.script-card.has-cover-image .script-card-cover-art::after {
+  opacity: 0.44;
+}
+
+.script-card.has-cover-image .script-card-cover-glow {
+  opacity: 0.42;
+}
+
+.script-card.has-cover-image .script-card-cover-ridge {
+  opacity: 0.34;
+}
+
+.script-card.has-cover-image .script-card-cover-emblem {
+  opacity: 0.58;
 }
 
 .script-card[data-palette="teal"] .script-card-cover {
@@ -1251,6 +1290,10 @@ h3 {
     linear-gradient(180deg, rgba(123, 44, 31, 0.88) 0%, rgba(89, 29, 22, 0.96) 100%);
 }
 
+.script-card.has-cover-image .script-card-cover-art {
+  background: linear-gradient(180deg, rgba(255, 246, 230, 0.04) 0%, rgba(22, 14, 9, 0.08) 100%);
+}
+
 .script-card-cover::after {
   content: "";
   position: absolute;
@@ -1264,6 +1307,28 @@ h3 {
 .script-card-body {
   padding: 12px 11px 12px;
   background: linear-gradient(180deg, rgba(249, 240, 225, 0.98) 0%, rgba(237, 223, 199, 0.98) 100%);
+}
+
+.script-card-head {
+  min-height: 62px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(117, 87, 58, 0.14);
+}
+
+.script-card-title {
+  margin: 0;
+  font-family: "FZ Zhang", "KaiTi", "STKaiti", serif;
+  font-size: 18px;
+  line-height: 1.25;
+  color: #2c1d12;
+}
+
+.script-card-subtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(84, 58, 36, 0.82);
 }
 
 .script-card-status {
@@ -3211,6 +3276,11 @@ body.desktop-phone-frame .game-modal,
 body.desktop-phone-frame .ending-shell {
   width: 100%;
   max-width: 100%;
+}
+
+body.desktop-phone-frame .script-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 @media (max-width: 560px) {
