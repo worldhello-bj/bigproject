@@ -173,12 +173,6 @@
       </div>
       <div class="welcome-panel">
       </div>
-      <nav class="startup-tabbar">
-        <button class="tab active" type="button" data-tab="home"><span class="tab-ico">宫</span><span class="tab-label">首页</span></button>
-        <button class="tab" type="button" data-tab="community"><span class="tab-ico">众</span><span class="tab-label">社区</span></button>
-        <button class="tab" type="button" data-tab="scripts"><span class="tab-ico">卷</span><span class="tab-label">剧本</span></button>
-        <button class="tab" type="button" data-tab="profile"><span class="tab-ico">人</span><span class="tab-label">我的</span></button>
-      </nav>
     </div>
   </section>
 
@@ -193,7 +187,7 @@
       <div class="toolbar">
         <button id="btn-start-selected-script" class="btn">使用所选剧本开始</button>
       </div>
-      <p class="muted">输入关键词或你想要的剧本风格，AI 会随机规划去往地点。</p>
+      <p class="muted">输入关键词或你想要的剧本风格，系统会据此规划路线并生成对应卷章文案。</p>
       <input id="script-gen-input" type="text" placeholder="例：悬疑、宫廷、刺客、夜雨、追缉" />
       <div class="toolbar">
         <button id="btn-generate-script" class="btn primary">生成剧本</button>
@@ -297,7 +291,6 @@
       <div class="toolbar camera-toolbar">
         <button id="btn-capture" class="btn primary">拍照并合成</button>
         <button id="btn-upload-photo" class="btn">上传图片合成</button>
-        <button id="btn-skip-camera" class="btn hidden">跳过拍照（测试）</button>
       </div>
       <input id="input-photo-file" type="file" accept="image/*" hidden />
     </div>
@@ -347,17 +340,6 @@
         <button id="btn-prompt-cancel" class="btn secondary hidden" type="button">取消</button>
         <button id="btn-prompt-ok" class="btn primary" type="button">我知道了</button>
       </div>
-    </div>
-  </section>
-
-  <section id="overlay-admin" class="overlay">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>管理员素材上传</h3>
-        <button class="btn-text back-btn" data-close="admin">返回</button>
-      </div>
-      <div id="admin-assets" class="list"></div>
-      <button id="btn-reset-assets" class="btn danger">恢复默认素材</button>
     </div>
   </section>
 

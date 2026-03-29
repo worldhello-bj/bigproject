@@ -11,6 +11,8 @@
       getLandmarkById,
       getScriptById,
       updateStartupHero,
+      hasActiveStorySession,
+      hasFinishedStorySession,
       showPromptDialog,
       openChat,
       saveAssets,
@@ -31,8 +33,22 @@
       天坛: "tiantan",
       永定门: "yongdingmen"
     };
+    const forumCoverImages = [
+      "./素材/社区图/微信图片_20260329023420_453_131.jpg",
+      "./素材/社区图/微信图片_20260329023422_454_131.jpg",
+      "./素材/社区图/微信图片_20260329023424_456_131.jpg",
+      "./素材/社区图/微信图片_20260329023426_457_131.jpg",
+      "./素材/社区图/微信图片_20260329023430_458_131.jpg"
+    ];
+    const shopProductImages = [
+      "./素材/周边/微信图片_20260329094347_479_131.jpg",
+      "./素材/周边/微信图片_20260329094349_480_131.jpg",
+      "./素材/周边/微信图片_20260329094350_481_131.jpg",
+      "./素材/周边/微信图片_20260329094352_482_131.jpg"
+    ];
     let communityView = "forum";
     let scriptFeedbackTimer = 0;
+    let activeScriptFilter = "";
 
     function showScriptLibraryFeedback(message) {
       const node = document.getElementById("script-library-feedback");
@@ -74,6 +90,7 @@
         && Array.isArray(state.session.routePlan)
         && state.session.routePlan.length
       );
+      const finishedStory = typeof hasFinishedStorySession === "function" && hasFinishedStorySession();
 
       const mapImage = homeMapConfig?.image || "./素材/主地图.png";
       mapNode.innerHTML = "";
@@ -114,6 +131,7 @@
 
         const linkedLandmarkId = resolvePointLandmarkId(pointName);
         if (!linkedLandmarkId) button.classList.add("disabled");
+        if (finishedStory) button.classList.add("disabled");
 
         const pos = getPointPosition(point);
         button.style.left = `${pos.left}%`;
@@ -123,6 +141,12 @@
           if (!linkedLandmarkId) {
             if (typeof showPromptDialog === "function") {
               showPromptDialog("该点位剧情暂未开放。", "提示");
+            }
+            return;
+          }
+          if (finishedStory) {
+            if (typeof showPromptDialog === "function") {
+              showPromptDialog("本卷已封卷，请从结局页“再启新卷”或返回起始页重新开始。", "主线已结束");
             }
             return;
           }
@@ -141,7 +165,7 @@
         && Array.isArray(state.session.routePlan)
         && state.session.routePlan.length
       );
-      const hasActiveStory = Boolean(
+      const hasActiveStory = typeof hasActiveStorySession === "function" ? hasActiveStorySession() : Boolean(
         state.session.landmarkId
         || state.session.story
         || state.session.history?.length
@@ -149,14 +173,20 @@
         || state.session.generatedScript
         || state.session.scriptIntroSeen
       );
+      const finishedStory = typeof hasFinishedStorySession === "function" && hasFinishedStorySession();
       if (el.homeScriptText) {
         const nextName = nextId ? getLandmarkById(nextId).name : "主线已封卷（可重置再游）";
-        el.homeScriptText.textContent = autoRouteMode
-          ? `AI剧本路线已生成：优先前往“${nextName}”继续主线。`
-          : `主线将沿中轴逐阙推进，点击当前地名即可进入剧情；完成对话、到达判定与拍照后解锁下一站“${nextName}”。`;
+        const currentScriptName = state.session.generatedScript?.name || getScriptById(state.selectedScriptId).name;
+        if (finishedStory) {
+          el.homeScriptText.textContent = `《${currentScriptName}》已封卷。本轮旅程已经收束，可从结局页“再启新卷”，或返回“进入中轴世界”重新开始。`;
+        } else {
+          el.homeScriptText.textContent = autoRouteMode
+            ? `AI剧本路线已生成：优先前往“${nextName}”继续主线。`
+            : `主线将沿中轴逐阙推进，点击当前地名即可进入剧情；完成对话、到达判定与拍照后解锁下一站“${nextName}”。`;
+        }
       }
       if (el.btnAbortHomeScript) {
-        el.btnAbortHomeScript.classList.toggle("hidden", !hasActiveStory);
+        el.btnAbortHomeScript.classList.toggle("hidden", !hasActiveStory || finishedStory);
       }
 
       updateStartupHero(state.activeTab || "home");
@@ -246,11 +276,14 @@
           }))
         ];
 
-        forumCards.forEach((card) => {
+        forumCards.forEach((card, idx) => {
+          const coverImage = forumCoverImages[idx % forumCoverImages.length] || "";
           const node = document.createElement("article");
           node.className = "forum-note";
           node.innerHTML = `
-            <div class="forum-cover" data-cover="${card.cover}"></div>
+            <div class="forum-cover" data-cover="${card.cover}">
+              ${coverImage ? `<img class="forum-cover-image" src="${coverImage}" alt="" />` : ""}
+            </div>
             <div class="forum-note-body">
               <h3 class="forum-note-title">${card.title}</h3>
               <p class="forum-note-text">${card.text}</p>
@@ -305,10 +338,10 @@
       productGrid.className = "shop-grid";
 
       const products = [
-        { name: "中轴夜游礼盒", price: "￥168", desc: "含卷轴地图、封签贴纸、剧情票根", badge: "热卖", cover: "gift" },
-        { name: "十二阙通关票夹", price: "￥49", desc: "仿古票夹设计，适合配合打卡图收藏", badge: "新品", cover: "ticket" },
-        { name: "故宫夜色明信片组", price: "￥36", desc: "6 张套装，做旧烫金工艺", badge: "推荐", cover: "postcard" },
-        { name: "天坛祈年香包", price: "￥59", desc: "草木香调，节日限定包装", badge: "限定", cover: "sachet" }
+        { name: "中轴夜游礼盒", price: "￥168", desc: "含卷轴地图、封签贴纸、剧情票根", badge: "热卖", cover: "gift", image: shopProductImages[0] },
+        { name: "十二阙通关票夹", price: "￥49", desc: "仿古票夹设计，适合配合打卡图收藏", badge: "新品", cover: "ticket", image: shopProductImages[1] },
+        { name: "故宫夜色明信片组", price: "￥36", desc: "6 张套装，做旧烫金工艺", badge: "推荐", cover: "postcard", image: shopProductImages[2] },
+        { name: "天坛祈年香包", price: "￥59", desc: "草木香调，节日限定包装", badge: "限定", cover: "sachet", image: shopProductImages[3] }
       ];
 
       products.forEach((product) => {
@@ -316,6 +349,7 @@
         node.className = "shop-card";
         node.innerHTML = `
           <div class="shop-card-cover" data-cover="${product.cover}">
+            ${product.image ? `<img class="shop-card-cover-image" src="${product.image}" alt="${product.name}" loading="lazy" />` : ""}
             <span class="shop-card-badge">${product.badge}</span>
           </div>
           <div class="shop-card-body">
@@ -338,6 +372,7 @@
       el.scriptList.innerHTML = "";
       const activeId = state.selectedScriptId;
       const primary = SCRIPTS[0];
+      const filterButtons = Array.from(document.querySelectorAll(".script-filter-chip"));
       const showcaseScripts = [
         {
           id: primary.id,
@@ -349,6 +384,7 @@
           accent: "moon",
           palette: "teal",
           available: true,
+          tags: ["代入感", "硬核推理", "卷轴叙事"],
           summary: primary.summary
         },
         {
@@ -361,6 +397,7 @@
           accent: "tower",
           palette: "umber",
           available: false,
+          tags: ["硬核推理", "卷轴叙事"],
           summary: "待开放推荐剧本"
         },
         {
@@ -373,6 +410,7 @@
           accent: "plum",
           palette: "ivory",
           available: false,
+          tags: ["古风悲歌", "卷轴叙事"],
           summary: "待开放推荐剧本"
         },
         {
@@ -385,6 +423,7 @@
           accent: "lady",
           palette: "olive",
           available: false,
+          tags: ["古风悲歌", "代入感"],
           summary: "待开放推荐剧本"
         },
         {
@@ -397,6 +436,7 @@
           accent: "fan",
           palette: "sand",
           available: false,
+          tags: ["代入感", "卷轴叙事"],
           summary: "待开放推荐剧本"
         },
         {
@@ -409,11 +449,33 @@
           accent: "door",
           palette: "red",
           available: false,
+          tags: ["硬核推理", "古风悲歌"],
           summary: "待开放推荐剧本"
         }
       ];
 
-      showcaseScripts.forEach((item) => {
+      filterButtons.forEach((button) => {
+        const label = String(button.textContent || "").trim();
+        const isActive = label === activeScriptFilter;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        if (button.dataset.bound === "true") return;
+        button.dataset.bound = "true";
+        button.addEventListener("click", () => {
+          activeScriptFilter = activeScriptFilter === label ? "" : (label || "");
+          renderScriptLibrary();
+          showScriptLibraryFeedback(activeScriptFilter
+            ? `已切换到“${activeScriptFilter}”筛选。`
+            : "已恢复全选剧本。");
+        });
+      });
+
+      const visibleScripts = showcaseScripts.filter((item) => {
+        const tags = Array.isArray(item.tags) ? item.tags : [];
+        return !activeScriptFilter || tags.includes(activeScriptFilter);
+      });
+
+      visibleScripts.forEach((item) => {
         const isActive = item.available && activeId === primary.id;
         const card = document.createElement("button");
         card.type = "button";
@@ -436,21 +498,27 @@
 
         card.innerHTML = `
           <div class="script-card-cover">
-            <div class="script-card-cover-art"></div>
-            <div class="script-card-badge">${item.available ? "可游玩" : "待开放"}</div>
-            <div class="script-card-cover-text">
-              <div class="script-card-title-vertical">${item.name}</div>
-              <div class="script-card-subtitle">${item.subtitle}</div>
+            <div class="script-card-cover-art">
+              <span class="script-card-cover-glow"></span>
+              <span class="script-card-cover-ridge"></span>
+              <span class="script-card-cover-emblem"></span>
+            </div>
+            <div class="script-card-cover-label">
+              <h3 class="script-card-cover-title">${item.name}</h3>
+              <p class="script-card-cover-subtitle">${item.subtitle}</p>
             </div>
           </div>
-          <div class="script-card-meta">
-            <div class="script-card-meta-row">
-              <span>难度：${item.difficulty}</span>
-              <span>人数：${item.players}</span>
-            </div>
-            <div class="script-card-meta-row">
-              <span>${item.available ? "主推" : "推荐"}</span>
-              <span>评分：${item.score}</span>
+          <div class="script-card-body">
+            <div class="script-card-status">${item.available ? "可游玩" : "待开放"}</div>
+            <div class="script-card-meta">
+              <div class="script-card-meta-row">
+                <span>难度：${item.difficulty}</span>
+                <span>人数：${item.players}</span>
+              </div>
+              <div class="script-card-meta-row">
+                <span>${item.available ? "主推" : "推荐"}</span>
+                <span>评分：${item.score}</span>
+              </div>
             </div>
           </div>
         `;

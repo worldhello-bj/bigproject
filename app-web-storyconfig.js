@@ -32,7 +32,8 @@ const FEED = [
 
 const STORAGE_KEYS = {
   scriptId: "cityquest_web_script_id",
-  assets: "cityquest_web_design_assets"
+  assets: "cityquest_web_design_assets",
+  storyProgress: "cityquest_web_story_progress"
 };
 
 const COOKIE_KEYS = {

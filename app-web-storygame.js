@@ -32,6 +32,13 @@ const {
 } = storyConfig;
 
 let DEFAULT_ASSETS = { ...DEFAULT_ASSETS_BASE };
+const CHAT_SNAPSHOT_KEY = "cityquest_web_chat_snapshot";
+const GENERATED_STYLE_LABELS = {
+  order: "循制",
+  insight: "辨伪",
+  resolve: "决断"
+};
+const MOBILE_UA_PATTERN = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i;
 const state = {
   activeTab: "home",
   selectedScriptId: SCRIPTS[0].id,
@@ -83,6 +90,7 @@ const el = {
   chatScriptLine: document.getElementById("chat-script-line"), storyProgress: document.getElementById("story-progress"), routeImpact: document.getElementById("route-impact"),
   storyGrid: document.getElementById("story-grid"), chatMessages: document.getElementById("chat-messages"), chatChoices: document.getElementById("chat-choices"),
   btnGoCamera: document.getElementById("btn-go-camera"),
+  cameraModal: document.querySelector("#overlay-camera .camera-modal"),
   cameraWrap: document.getElementById("camera-wrap"),
   cameraVideo: document.getElementById("camera-video"), cameraFrame: document.getElementById("camera-frame"), cameraTip: document.getElementById("camera-tip"),
   inputPhotoFile: document.getElementById("input-photo-file"), composeCanvas: document.getElementById("compose-canvas"), resultImage: document.getElementById("result-image"),
@@ -115,7 +123,9 @@ const hasActiveStorySession = () => Boolean(
   || state.session.completed?.length
   || state.session.generatedScript
   || state.session.scriptIntroSeen
+  || state.session.finalEnding
 );
+const hasFinishedStorySession = () => Boolean(state.session.finalEnding);
 const getExpectedLandmarkId = () => {
   if (hasGeneratedRoutePlan()) {
     return state.session.routePlan[state.session.completed.length] || "";
@@ -125,6 +135,7 @@ const getExpectedLandmarkId = () => {
 const getNpcByKey = (key) => NPC_ASSETS[key] || NPC_ASSETS.official;
 const getNpcByLandmark = (landmark) => getNpcByKey(landmark?.npcKey);
 const getChatBgByLandmark = (landmark) => LANDMARK_CHAT_BG[landmark?.id] || "./素材/每个地区的背景图/故宫.png";
+const getCameraBackdropByLandmark = (landmark) => getChatBgByLandmark(landmark);
 const getCheckinBgByLandmark = (landmark) => CHECKIN_BG_BY_LANDMARK[landmark?.id] || CHECKIN_BG_FALLBACK;
 const getCheckinBgForSession = () => {
   const landmark = state.session.landmarkId ? getLandmarkById(state.session.landmarkId) : null;
@@ -162,9 +173,10 @@ const renderGeneratedScriptPlan = (script) => {
     el.scriptPlanRoute.innerHTML = "";
     script.routePlan.forEach((id, idx) => {
       const landmark = getLandmarkById(id);
+      const routeNote = script.routeNotes?.[id] || "";
       const row = document.createElement("div");
       row.className = "item";
-      row.innerHTML = `<div class="item-title">第 ${idx + 1} 站：${landmark.name}</div><div class="item-sub">${landmark.persona}</div>`;
+      row.innerHTML = `<div class="item-title">第 ${idx + 1} 站：${landmark.name}</div><div class="item-sub">${landmark.persona}${routeNote ? `｜${routeNote}` : ""}</div>`;
       el.scriptPlanRoute.appendChild(row);
     });
   }
@@ -221,10 +233,14 @@ const renderScriptIntroOverlay = (script, landmark, story) => {
     const points = [];
     points.push(`本站任务：${story?.objective || "完成本阙校验"}`);
     if (hasGeneratedRoutePlan()) {
+      const generatedTpl = state.session.generatedScript?.sceneTemplates?.[landmark.id];
       const nextGeneratedId = state.session.routePlan[(state.session.completed?.length || 0) + 1] || "";
       const nextGeneratedName = nextGeneratedId ? getLandmarkById(nextGeneratedId).name : "终章封卷";
+      if (generatedTpl?.routeNote) points.push(`本段卷意：${generatedTpl.routeNote}`);
       choices.forEach((choice) => {
-        points.push(`${choice.text}：用于补全本站调查，不改变 AI 路线。`);
+        const style = generatedTpl?.choiceStyles?.[choice.id] || "";
+        const styleLabel = GENERATED_STYLE_LABELS[style] || "本站调查";
+        points.push(`${choice.text}：强化${styleLabel}取向，不改变 AI 路线。`);
       });
       points.push(`下一站：${nextGeneratedName}`);
     } else {
@@ -253,7 +269,7 @@ const resetSessionForGeneratedScript = (generated) => {
   state.session.generatedScript = generated;
   state.session.pendingScriptPlan = null;
   state.session.landmarkId = "";
-  state.session.scriptIntroSeen = true;
+  state.session.scriptIntroSeen = false;
   state.session.history = [];
   state.session.story = null;
   state.session.checkInPassed = false;
@@ -265,15 +281,25 @@ const resetSessionForGeneratedScript = (generated) => {
 };
 const onGenerateScriptPlan = () => {
   const prompt = (el.scriptGenInput?.value || "").trim();
+  if (!prompt) {
+    showPromptDialog("请输入至少一个关键词，例如“悬疑”“宫廷”或“夜雨追缉”。", "补充关键词", {
+      variant: "centered"
+    });
+    return;
+  }
   let generated = null;
   try {
     generated = buildGeneratedScriptFromPrompt(prompt);
   } catch (_err) {
-    showPromptDialog("剧本生成模块未加载，请检查 app-web-storygen.js。", "模块异常");
+    showPromptDialog("剧本生成模块未加载，请检查 app-web-storygen.js。", "模块异常", {
+      variant: "centered"
+    });
     return;
   }
   if (!generated || !Array.isArray(generated.routePlan) || !generated.routePlan.length) {
-    showPromptDialog("未生成可用路线，请更换关键词重试。", "生成失败");
+    showPromptDialog("未生成可用路线，请更换关键词重试。", "生成失败", {
+      variant: "centered"
+    });
     return;
   }
   state.session.pendingScriptPlan = generated;
@@ -310,14 +336,16 @@ const onStartGeneratedScript = () => {
   const generated = state.session.pendingScriptPlan;
   if (!generated) return;
   resetSessionForGeneratedScript(generated);
-  clearStoryProgressCookie();
+  clearStoryProgressStore();
   closeWelcome();
   setTab("home");
   closeOverlay("script-plan");
   closeOverlay("script-builder");
   const firstLandmarkId = state.session.nextLandmarkId;
   if (!firstLandmarkId) {
-    showPromptDialog("未生成可用路线，请重新生成。", "生成失败");
+    showPromptDialog("未生成可用路线，请重新生成。", "生成失败", {
+      variant: "centered"
+    });
     return;
   }
   openChat(firstLandmarkId, "AI生成启卷");
@@ -335,15 +363,10 @@ function readCookie(name) {
   }
   return "";
 }
-function writeCookie(name, value, days = 14) {
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
-}
 function deleteCookie(name) {
   document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; path=/; SameSite=Lax`;
 }
-function loadStoryProgressStore() {
-  const raw = readCookie(COOKIE_KEYS.storyProgress);
+function parseStoryProgressStore(raw) {
   if (!raw) return { byLandmark: {} };
   try {
     const parsed = JSON.parse(raw);
@@ -354,8 +377,63 @@ function loadStoryProgressStore() {
     return { byLandmark: {} };
   }
 }
+function sanitizeChatHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((message) => message && typeof message === "object")
+    .map((message) => ({
+      role: message.role === "user" ? "user" : "assistant",
+      content: String(message.content || "")
+    }))
+    .filter((message) => message.content)
+    .slice(-50);
+}
+function loadChatSnapshot(landmarkId) {
+  try {
+    const raw = localStorage.getItem(CHAT_SNAPSHOT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return [];
+    if (parsed.landmarkId !== landmarkId) return [];
+    return sanitizeChatHistory(parsed.history);
+  } catch (_e) {
+    return [];
+  }
+}
+function saveCurrentChatSnapshot() {
+  try {
+    if (!state.session.landmarkId || !state.session.story) {
+      localStorage.removeItem(CHAT_SNAPSHOT_KEY);
+      return;
+    }
+    localStorage.setItem(CHAT_SNAPSHOT_KEY, JSON.stringify({
+      landmarkId: state.session.landmarkId,
+      history: sanitizeChatHistory(state.session.history),
+      updatedAt: Date.now()
+    }));
+  } catch (_e) {}
+}
+function clearChatSnapshot() {
+  try {
+    localStorage.removeItem(CHAT_SNAPSHOT_KEY);
+  } catch (_e) {}
+}
+function loadStoryProgressStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.storyProgress);
+    if (raw) return parseStoryProgressStore(raw);
+  } catch (_e) {}
+  const legacyRaw = readCookie(COOKIE_KEYS.storyProgress);
+  if (!legacyRaw) return { byLandmark: {} };
+  const legacyStore = parseStoryProgressStore(legacyRaw);
+  saveStoryProgressStore(legacyStore);
+  deleteCookie(COOKIE_KEYS.storyProgress);
+  return legacyStore;
+}
 function saveStoryProgressStore(store) {
-  writeCookie(COOKIE_KEYS.storyProgress, JSON.stringify(store || { byLandmark: {} }));
+  try {
+    localStorage.setItem(STORAGE_KEYS.storyProgress, JSON.stringify(store || { byLandmark: {} }));
+  } catch (_e) {}
 }
 function getSavedLandmarkProgress(landmarkId) {
   const store = loadStoryProgressStore();
@@ -382,11 +460,16 @@ function persistCurrentLandmarkProgress() {
     generatedScript: state.session.generatedScript || null,
     scriptIntroSeen: Boolean(state.session.scriptIntroSeen),
     completed: Array.isArray(state.session.completed) ? [...state.session.completed] : [],
+    introducedRoleKeys: Array.isArray(state.session.introducedRoleKeys) ? [...state.session.introducedRoleKeys] : [],
     choiceStats: { ...(state.session.choiceStats || { order: 0, insight: 0, resolve: 0 }) }
   };
   saveStoryProgressStore(store);
+  saveCurrentChatSnapshot();
 }
-function clearStoryProgressCookie() {
+function clearStoryProgressStore() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.storyProgress);
+  } catch (_e) {}
   deleteCookie(COOKIE_KEYS.storyProgress);
 }
 function normalizeSavedProgress(saved, story) {
@@ -407,7 +490,7 @@ function normalizeSavedProgress(saved, story) {
     checkInPassed: Boolean(saved?.checkInPassed)
   };
 }
-function restoreRouteFromCookie() {
+function restoreRouteFromStorage() {
   const store = loadStoryProgressStore();
   const route = store.route;
   if (!route || typeof route !== "object") return;
@@ -425,6 +508,9 @@ function restoreRouteFromCookie() {
   }
   if (Array.isArray(route.completed)) {
     state.session.completed = route.completed.filter((id) => LANDMARKS.some((l) => l.id === id));
+  }
+  if (Array.isArray(route.introducedRoleKeys)) {
+    state.session.introducedRoleKeys = route.introducedRoleKeys.filter((item) => typeof item === "string");
   }
   if (route.choiceStats && typeof route.choiceStats === "object") {
     const stats = ensureChoiceStats();
@@ -490,8 +576,6 @@ function setTab(tab) {
   document.body.classList.toggle("home-map-mode", tab === "home");
   Object.entries(el.pages).forEach(([k, n]) => n && n.classList.toggle("active", k === tab));
   el.tabs.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
-  Array.from(document.querySelectorAll(".startup-tabbar .tab"))
-    .forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
 }
 
 function updateStartupHero(tab) {
@@ -508,11 +592,20 @@ function updateViewportMetrics() {
   const viewport = window.visualViewport;
   const width = Math.max(320, Math.round(viewport?.width || window.innerWidth || 390));
   const height = Math.max(560, Math.round(viewport?.height || window.innerHeight || 844));
-  const fit = Math.min(width / 390, height / 844);
+  const ua = navigator.userAgent || "";
+  const screenWidth = window.screen?.width || width;
+  const screenHeight = window.screen?.height || height;
+  const shortestSide = Math.min(screenWidth, screenHeight);
+  const isMobileLike = MOBILE_UA_PATTERN.test(ua) || (/Macintosh/i.test(ua) && Number(navigator.maxTouchPoints || 0) > 1 && shortestSide <= 1366);
+  const desktopPhoneFrame = width > 560 && !isMobileLike;
+  const appWidth = desktopPhoneFrame ? 390 : width;
+  const appHeight = desktopPhoneFrame ? 844 : height;
+  const fit = Math.min(appWidth / 390, appHeight / 844);
   const uiScale = Math.max(0.86, Math.min(1, fit));
-  const denseScale = Math.max(0.82, Math.min(1, height / 844));
+  const denseScale = Math.max(0.82, Math.min(1, appHeight / 844));
 
-  document.documentElement.style.setProperty("--app-vh", `${height}px`);
+  document.body.classList.toggle("desktop-phone-frame", desktopPhoneFrame);
+  document.documentElement.style.setProperty("--app-vh", `${appHeight}px`);
   document.documentElement.style.setProperty("--ui-scale", uiScale.toFixed(4));
   document.documentElement.style.setProperty("--dense-scale", denseScale.toFixed(4));
 }
@@ -525,6 +618,17 @@ function openWelcome() {
 function closeWelcome() {
   closeOverlay("welcome");
   setTab(state.activeTab || "home");
+}
+function routeToHomeSurface(options = {}) {
+  const forceWelcome = Boolean(options.forceWelcome);
+  setTab("home");
+  closeOverlay("script-builder");
+  closeOverlay("script-plan");
+  if (forceWelcome || !hasActiveStorySession()) {
+    openWelcome();
+    return;
+  }
+  closeWelcome();
 }
 
 let pageViews = null;
@@ -544,6 +648,8 @@ function ensurePageViews() {
     getLandmarkById,
     getScriptById,
     updateStartupHero,
+    hasActiveStorySession,
+    hasFinishedStorySession,
     showPromptDialog,
     openChat,
     saveAssets,
@@ -799,12 +905,12 @@ function renderAll() {
   renderResult();
   renderEnding();
   renderScriptBuilderOptions();
-  views.renderAdmin();
 }
 
 function addChatMessage(role, content) {
   state.session.history.push({ role, content: String(content || "") });
   if (state.session.history.length > 50) state.session.history = state.session.history.slice(-50);
+  saveCurrentChatSnapshot();
   renderChat();
 }
 
@@ -841,10 +947,11 @@ function onStoryChoice(choiceId) {
   applyStoryEffects(choice.effects || []);
   if (node.id === "n1") {
     const landmarkId = state.session.landmarkId;
+    const generatedTpl = state.session.generatedScript?.sceneTemplates?.[landmarkId];
     story.routeChoiceId = choice.id;
-    const result = STATION_CHOICE_RESULTS[landmarkId]?.[choice.id];
+    const result = generatedTpl?.choiceResults?.[choice.id] || STATION_CHOICE_RESULTS[landmarkId]?.[choice.id];
     if (result) addChatMessage("assistant", result);
-    const style = CHOICE_STYLE_BY_STATION[landmarkId]?.[choice.id];
+    const style = generatedTpl?.choiceStyles?.[choice.id] || CHOICE_STYLE_BY_STATION[landmarkId]?.[choice.id];
     if (style) {
       const stats = ensureChoiceStats();
       stats[style] = Number(stats[style] || 0) + 1;
@@ -870,8 +977,21 @@ function onStoryChoice(choiceId) {
   if (story.canCheckArrival) addChatMessage("assistant", "此站文脉已合，地校符印已启，可行“到达判定”。");
   persistCurrentLandmarkProgress();
 }
-function openOverlay(name) { document.getElementById(`overlay-${name}`)?.classList.add("show"); }
-function closeOverlay(name) { document.getElementById(`overlay-${name}`)?.classList.remove("show"); if (name === "camera") stopCamera(); }
+function syncOverlayBodyState() {
+  const welcomeOpen = document.getElementById("overlay-welcome")?.classList.contains("show");
+  document.body.classList.toggle("welcome-open", Boolean(welcomeOpen));
+}
+
+function openOverlay(name) {
+  document.getElementById(`overlay-${name}`)?.classList.add("show");
+  syncOverlayBodyState();
+}
+
+function closeOverlay(name) {
+  document.getElementById(`overlay-${name}`)?.classList.remove("show");
+  if (name === "camera") stopCamera();
+  syncOverlayBodyState();
+}
 function setPromptButtonTone(button, tone = "") {
   if (!button) return;
   const hidden = button.classList.contains("hidden");
@@ -931,10 +1051,7 @@ function onAbortHomeScript() {
     confirmTone: "danger",
     onConfirm: () => {
       resetSession();
-      setTab("home");
-      closeOverlay("script-builder");
-      closeOverlay("script-plan");
-      openWelcome();
+      routeToHomeSurface({ forceWelcome: true });
     }
   });
 }
@@ -957,6 +1074,7 @@ function openChat(landmarkId, entryHint = "") {
 
   if (savedProgress) {
     const restored = normalizeSavedProgress(savedProgress, story);
+    const restoredHistory = loadChatSnapshot(landmark.id);
     state.session.story = {
       title: story.title,
       objective: story.objective,
@@ -971,6 +1089,7 @@ function openChat(landmarkId, entryHint = "") {
       canCheckArrival: restored.canCheckArrival
     };
     state.session.checkInPassed = restored.checkInPassed;
+    state.session.history = restoredHistory;
   } else {
     state.session.story = {
       title: story.title,
@@ -985,30 +1104,35 @@ function openChat(landmarkId, entryHint = "") {
       visitedNodes: [story.entry],
       canCheckArrival: false
     };
+    state.session.history = [];
   }
 
-  const hint = entryHint ? `（入径：${entryHint}）` : "";
-  addChatMessage("assistant", `${landmark.name}：${script.opening}${hint}`);
-  if (hasGeneratedRoutePlan()) {
-    const nextGeneratedId = state.session.routePlan[state.session.completed.length + 1] || "";
-    const nextGeneratedName = nextGeneratedId ? getLandmarkById(nextGeneratedId).name : "终章封卷";
-    addChatMessage("assistant", `【第 ${stageNo} 站】当前追缉点：${landmark.name}。本卷路线已预设，完成本站后将转往 ${nextGeneratedName}。`);
+  if (!state.session.history.length) {
+    const hint = entryHint ? `（入径：${entryHint}）` : "";
+    addChatMessage("assistant", `${landmark.name}：${script.opening}${hint}`);
+    if (hasGeneratedRoutePlan()) {
+      const nextGeneratedId = state.session.routePlan[state.session.completed.length + 1] || "";
+      const nextGeneratedName = nextGeneratedId ? getLandmarkById(nextGeneratedId).name : "终章封卷";
+      addChatMessage("assistant", `【第 ${stageNo} 站】当前追缉点：${landmark.name}。本卷路线已预设，完成本站后将转往 ${nextGeneratedName}。`);
+    } else {
+      addChatMessage("assistant", `【第 ${stageNo} 站】当前追缉点：${landmark.name}。后续去向由本站抉择导引。`);
+    }
+    if (firstMeetRole) {
+      state.session.introducedRoleKeys.push(introKey);
+      addChatMessage("assistant", buildRoleIntroLine(landmark, story));
+    }
+    addChatMessage("assistant", `卷章启：${story.title}`);
+    const beat = state.session.generatedScript?.beats?.[landmark.id] || MAINLINE_BEATS[landmark.id];
+    if (beat) addChatMessage("assistant", beat);
+    if (savedProgress) {
+      const tags = state.session.story.tags || [];
+      addChatMessage("assistant", `已恢复进度：已获线索 ${tags.length ? tags.join("、") : "无"}。`);
+    }
+    const first = getCurrentStoryNode();
+    if (first) addChatMessage("assistant", `${first.speaker}：${first.text}`);
   } else {
-    addChatMessage("assistant", `【第 ${stageNo} 站】当前追缉点：${landmark.name}。后续去向由本站抉择导引。`);
+    renderChat();
   }
-  if (firstMeetRole) {
-    state.session.introducedRoleKeys.push(introKey);
-    addChatMessage("assistant", buildRoleIntroLine(landmark, story));
-  }
-  addChatMessage("assistant", `卷章启：${story.title}`);
-  const beat = state.session.generatedScript?.beats?.[landmark.id] || MAINLINE_BEATS[landmark.id];
-  if (beat) addChatMessage("assistant", beat);
-  if (savedProgress) {
-    const tags = state.session.story.tags || [];
-    addChatMessage("assistant", `已恢复进度：已获线索 ${tags.length ? tags.join("、") : "无"}。`);
-  }
-  const first = getCurrentStoryNode();
-  if (first) addChatMessage("assistant", `${first.speaker}：${first.text}`);
   persistCurrentLandmarkProgress();
   openOverlay("chat");
   if (!state.session.scriptIntroSeen) {
@@ -1029,6 +1153,15 @@ function onCheckArrival() {
 }
 
 async function startCamera() {
+  const landmark = state.session.landmarkId ? getLandmarkById(state.session.landmarkId) : null;
+  if (el.cameraModal) {
+    const cameraBackdrop = getCameraBackdropByLandmark(landmark);
+    if (cameraBackdrop) {
+      el.cameraModal.style.setProperty("--camera-modal-bg-image", `url("${cameraBackdrop}")`);
+    } else {
+      el.cameraModal.style.removeProperty("--camera-modal-bg-image");
+    }
+  }
   if (el.cameraFrame) {
     const checkinBg = getCheckinBgForSession();
     el.cameraFrame.onload = syncCameraWindowToFrame;
@@ -1365,7 +1498,8 @@ function onContinueProgress() {
   if (!nextLandmarkId) {
     const ending = resolveFinalEnding();
     state.session.finalEnding = ending;
-    clearStoryProgressCookie();
+    clearStoryProgressStore();
+    clearChatSnapshot();
     closeOverlay("chat");
     setTab("home");
     renderEnding();
@@ -1395,7 +1529,8 @@ function resetSession() {
     choiceStats: { order: 0, insight: 0, resolve: 0 },
     finalEnding: null
   };
-  clearStoryProgressCookie();
+  clearStoryProgressStore();
+  clearChatSnapshot();
   closeOverlay("result"); closeOverlay("chat"); closeOverlay("camera");
   closeOverlay("ending"); closeOverlay("script-plan"); closeOverlay("script-builder"); closeOverlay("dialog");
   renderAll();
@@ -1405,19 +1540,11 @@ function bindEvents() {
   updateViewportMetrics();
   const onPrimaryTabSelect = (tab) => {
     const targetTab = tab || "home";
-    setTab(targetTab);
     if (targetTab === "home") {
-      if (hasActiveStorySession()) {
-        closeOverlay("script-builder");
-        closeOverlay("script-plan");
-        closeWelcome();
-        return;
-      }
-      closeOverlay("script-builder");
-      closeOverlay("script-plan");
-      openWelcome();
+      routeToHomeSurface();
       return;
     }
+    setTab(targetTab);
     closeWelcome();
   };
 
@@ -1439,18 +1566,13 @@ function bindEvents() {
   bindClick("btn-start-selected-script", onStartSelectedScript);
   bindClick("btn-start-generated-script", onStartGeneratedScript);
   bindClick("btn-back-from-welcome", closeWelcome);
-  bindClick("btn-default-landmark", () => openChat("zhonggulou", "默认占位"));
-  bindClick("btn-open-admin-home", () => openOverlay("admin"));
-  bindClick("btn-open-admin-profile", () => openOverlay("admin"));
-  bindClick("btn-go-home-by-script", () => setTab("home"));
+  bindClick("btn-go-home-by-script", () => routeToHomeSurface());
   bindClick("btn-abort-home-script", onAbortHomeScript);
-  bindClick("btn-reset-session", resetSession);
   bindClick("btn-script-intro-start", () => closeOverlay("script-intro"));
   bindClick("btn-check-arrival", onCheckArrival);
   bindClick("btn-go-camera", async () => { openOverlay("camera"); await startCamera(); });
   bindClick("btn-capture", onCapture);
   bindClick("btn-upload-photo", () => el.inputPhotoFile?.click());
-  bindClick("btn-skip-camera", onSkipCamera);
   bindClick("btn-save-result", onSaveResult);
   bindClick("btn-restart", onContinueProgress);
   bindClick("btn-prompt-ok", onPromptDialogConfirm);
@@ -1460,22 +1582,9 @@ function bindEvents() {
     resetSession();
     openOverlay("script-builder");
   });
-  bindClick("btn-reset-assets", () => { state.designAssets = { ...DEFAULT_ASSETS }; saveAssets(); renderAll(); });
 
   Array.from(document.querySelectorAll('[data-back="welcome"]'))
     .forEach((node) => node.addEventListener("click", openWelcome));
-
-  const startupTabs = Array.from(document.querySelectorAll(".startup-tabbar .tab"));
-  startupTabs.forEach((item) => item.classList.toggle("active", item.dataset.tab === (state.activeTab || "home")));
-  startupTabs.forEach((button) => {
-    button.addEventListener("click", () => {
-      startupTabs.forEach((item) => item.classList.toggle("active", item === button));
-      const targetTab = button.dataset.tab || "home";
-      setTab(targetTab);
-      updateStartupHero(targetTab);
-      if (targetTab !== "home") closeWelcome();
-    });
-  });
 
   // Hotspot fallback: in case absolute button shifts on some phone ratios,
   // clicking the vertical plaque area still enters.
@@ -1484,7 +1593,6 @@ function bindEvents() {
     welcomeModal.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest(".startup-tabbar")) return;
       if (target.closest("#btn-enter-app")) return;
 
       const rect = welcomeModal.getBoundingClientRect();
@@ -1499,7 +1607,20 @@ function bindEvents() {
   }
 
   if (el.inputPhotoFile) el.inputPhotoFile.addEventListener("change", async () => { const file = el.inputPhotoFile.files?.[0]; if (!file) return; await onUploadPhoto(file); el.inputPhotoFile.value = ""; });
-  Array.from(document.querySelectorAll("[data-close]")).forEach((node) => node.addEventListener("click", () => closeOverlay(node.dataset.close)));
+  Array.from(document.querySelectorAll("[data-close]")).forEach((node) => node.addEventListener("click", () => {
+    const target = node.dataset.close;
+    if (target === "script-builder") {
+      closeOverlay("script-builder");
+      openWelcome();
+      return;
+    }
+    if (target === "script-plan") {
+      closeOverlay("script-plan");
+      openOverlay("script-builder");
+      return;
+    }
+    closeOverlay(target);
+  }));
   if (el.promptDialog) {
     el.promptDialog.addEventListener("click", (event) => {
       if (event.target !== el.promptDialog) return;
@@ -1525,10 +1646,11 @@ async function init() {
   loadScriptId();
   DEFAULT_ASSETS = await resolveFolderDefaultAssets();
   loadAssets();
-  restoreRouteFromCookie();
+  restoreRouteFromStorage();
   bindEvents();
   updateViewportMetrics();
   setTab("home");
+  syncOverlayBodyState();
   renderAll();
 }
 

@@ -114,9 +114,120 @@
     yongdingmen: ["永定门", "封阙", "终门"]
   };
 
+  const PROFILE_COMPANIONS = {
+    suspense: ["intrigue", "legend"],
+    intrigue: ["suspense", "ritual"],
+    pursuit: ["suspense", "legend"],
+    ritual: ["intrigue", "legend"],
+    legend: ["suspense", "ritual"]
+  };
+
+  const PROFILE_SECRETS = {
+    suspense: ["一份被倒写的旧档", "两段互相抵触的口供", "一条被故意抹去的交接刻记"],
+    intrigue: ["一册被调位的宫门旧牒", "一段被借名挪用的礼序", "一份不该出现在内廷的错印记录"],
+    pursuit: ["一条被层层换手的南下线", "一道伪装成常规通行的撤离口", "一份仍在赶往终门的押运暗记"],
+    ritual: ["一场尚未成形却已被预布的逆仪", "一处被改过朝向的终局位点", "一套借层阶拼合旧契的祭序"],
+    legend: ["一段借旧闻藏身的真去向", "一则被人故意放大的异闻", "一缕在夜色里反复易手的旧痕"]
+  };
+
+  const PROFILE_COVER_STORIES = {
+    suspense: ["把真证混进假证链里", "让每一站只看见被处理过的表象", "借错位口供抹平真正的断点"],
+    intrigue: ["借礼序之名掩护递卷", "把内廷旧例伪装成合法手续", "拿站位与仪次做一层最稳的遮盖"],
+    pursuit: ["以撤离线层层换手", "在桥门之间制造错追节奏", "借通行章法掩住真正押运口"],
+    ritual: ["借坛庙次第拼出一场逆仪", "把层阶与朝向改成伪契", "让旧制看起来像在自行运转"],
+    legend: ["把异闻当成掩护", "让旧说替真相遮面", "用夜色里半真半假的传闻拖偏追查"]
+  };
+
+  const ROUTE_PATTERNS = [
+    {
+      id: "north_watch",
+      label: "北阙追迹",
+      profiles: ["suspense", "pursuit", "legend"],
+      keywords: ["钟鼓楼", "北城", "夜行", "桥影", "望阙", "追缉"],
+      sequence: ["zhonggulou", "wan_ning_bridge", "jingshan", "gugong", "tiananmen", "zhengyangmen", "yongdingmen"]
+    },
+    {
+      id: "court_core",
+      label: "宫城拆局",
+      profiles: ["intrigue", "suspense"],
+      keywords: ["宫廷", "故宫", "太庙", "社稷", "宫门", "内廷"],
+      sequence: ["jingshan", "gugong", "shejitan", "taimiao", "tiananmen", "waijinshuiqiao", "zhengyangmen"]
+    },
+    {
+      id: "ritual_spine",
+      label: "坛庙逆仪",
+      profiles: ["ritual", "intrigue", "legend"],
+      keywords: ["祭仪", "礼制", "社稷", "太庙", "圜丘", "天坛"],
+      sequence: ["gugong", "shejitan", "taimiao", "xiannongtan", "tiantan", "yongdingmen"]
+    },
+    {
+      id: "shadow_run",
+      label: "桥门夜缉",
+      profiles: ["pursuit", "legend", "suspense"],
+      keywords: ["刺客", "逃亡", "桥契", "关牒", "城门", "南下"],
+      sequence: ["zhonggulou", "wan_ning_bridge", "gugong", "tiananmen", "waijinshuiqiao", "zhengyangmen", "yongdingmen"]
+    },
+    {
+      id: "southern_lock",
+      label: "南城封卷",
+      profiles: ["ritual", "pursuit"],
+      keywords: ["终局", "封阙", "先农坛", "天坛", "永定门"],
+      sequence: ["tiananmen", "waijinshuiqiao", "zhengyangmen", "xiannongtan", "tiantan", "yongdingmen"]
+    },
+    {
+      id: "grand_axis",
+      label: "全轴长卷",
+      profiles: ["pursuit", "intrigue", "ritual", "legend", "suspense"],
+      keywords: ["全轴", "史诗", "长篇", "完整", "十二阙"],
+      sequence: ["zhonggulou", "wan_ning_bridge", "jingshan", "gugong", "shejitan", "taimiao", "tiananmen"]
+    }
+  ];
+
+  const STYLE_LABELS = {
+    order: "循制",
+    insight: "辨伪",
+    resolve: "决断"
+  };
+
+  const PROFILE_STYLE_ROTATIONS = {
+    suspense: [["insight", "order"], ["insight", "resolve"], ["order", "resolve"]],
+    intrigue: [["order", "insight"], ["order", "resolve"], ["insight", "resolve"]],
+    pursuit: [["resolve", "insight"], ["resolve", "order"], ["insight", "order"]],
+    ritual: [["order", "resolve"], ["insight", "order"], ["resolve", "insight"]],
+    legend: [["insight", "resolve"], ["resolve", "order"], ["insight", "order"]]
+  };
+
+  const STYLE_CLUE_SUFFIXES = {
+    order: ["次序", "旧例", "印次", "章法"],
+    insight: ["暗纹", "伪迹", "旁证", "影痕"],
+    resolve: ["去向", "截点", "锁口", "押痕"]
+  };
+
+  const THEME_CLUE_SUFFIXES = {
+    suspense: ["疑点", "错记", "残证", "暗码"],
+    intrigue: ["礼次", "宫签", "旧档", "门印"],
+    pursuit: ["脚程", "换手", "南线", "追迹"],
+    ritual: ["祭序", "层位", "朝向", "契痕"],
+    legend: ["异闻", "夜痕", "旧说", "雾影"]
+  };
+
+  const STYLE_OPTION_TAGS = {
+    order: ["稳次序", "校旧例", "定层位"],
+    insight: ["辨伪迹", "拆暗纹", "问旁证"],
+    resolve: ["截去向", "逼真凶", "锁关节"]
+  };
+
+  const STYLE_RESULT_LEADS = {
+    order: ["你先把章法重新钉回了原位。", "你先让本该咬合的次序重新对上。", "你先稳住了这一站最容易失序的那一环。"],
+    insight: ["你先拆开了表象之下最藏人的那层伪装。", "你先把真假线索之间的裂缝看清了。", "你先从混杂口供里剥出了能立住的实证。"],
+    resolve: ["你先抢回了追缉的主动。", "你先把对方来得及转手的那一步截住了。", "你先逼住了最关键的转运口。"]
+  };
+
   const DEFAULT_PROFILE = THEME_PROFILES.find((profile) => profile.id === "pursuit") || THEME_PROFILES[0];
   const CHAPTER_LABELS = ["起卷", "追迹", "逼城", "拆局", "得证", "封卷", "终章"];
   const BEAT_LABELS = ["起疑", "觅迹", "逼近", "拆解", "夺证", "定局", "封阙"];
+  const PHASE_LABELS = ["启卷", "追索", "逼近", "拆局", "夺证", "合卷", "封阙"];
+  const PHASE_GOALS = ["摸清起点", "补齐去向", "压缩假线", "拆出真手脚", "夺回关键证", "合成整卷", "完成封缄"];
 
   function createSeed(text) {
     let seed = 2166136261;
@@ -149,12 +260,32 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function unique(values) {
+    return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
+  }
+
   function tokenizePrompt(text) {
-    return String(text || "")
+    const raw = String(text || "").trim();
+    if (!raw) return [];
+    const seedTokens = raw
       .split(/[\s,，。；;、/|]+/)
       .map((token) => token.trim())
-      .filter(Boolean)
-      .slice(0, 8);
+      .filter(Boolean);
+
+    const expanded = [];
+    seedTokens.forEach((token) => {
+      const clean = token.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, "");
+      if (clean) expanded.push(clean);
+      if (/^[\u4e00-\u9fa5]{4,}$/.test(clean)) {
+        for (let size = 2; size <= 4; size += 1) {
+          for (let index = 0; index <= clean.length - size; index += 1) {
+            expanded.push(clean.slice(index, index + size));
+          }
+        }
+      }
+    });
+
+    return unique(expanded).slice(0, 12);
   }
 
   function includesKeyword(tokens, keywords) {
@@ -168,19 +299,31 @@
     }, 0);
   }
 
-  function resolveThemeProfile(tokens, rng) {
-    const scored = THEME_PROFILES
+  function scoreThemeProfiles(tokens) {
+    return THEME_PROFILES
       .map((profile) => ({ profile, score: scoreThemeProfile(tokens, profile) }))
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return Number(b.profile.priority || 0) - Number(a.profile.priority || 0);
       });
+  }
+
+  function resolveThemeBlend(tokens, rng) {
+    const scored = scoreThemeProfiles(tokens);
     const top = scored[0];
-    if (!top || top.score <= 0) return DEFAULT_PROFILE;
-    const tied = scored
-      .filter((entry) => entry.score === top.score && Number(entry.profile.priority || 0) === Number(top.profile.priority || 0))
-      .map((entry) => entry.profile);
-    return pickFrom(tied, rng, DEFAULT_PROFILE);
+    const primary = !top || top.score <= 0 ? DEFAULT_PROFILE : top.profile;
+    const secondaryFromPrompt = scored.find((entry) => entry.profile.id !== primary.id && entry.score > 0)?.profile || null;
+    if (secondaryFromPrompt) return { primary, secondary: secondaryFromPrompt, scored };
+
+    const companions = (PROFILE_COMPANIONS[primary.id] || [])
+      .map((id) => THEME_PROFILES.find((profile) => profile.id === id))
+      .filter(Boolean);
+    const secondary = pickFrom(
+      companions,
+      rng,
+      THEME_PROFILES.find((profile) => profile.id !== primary.id) || DEFAULT_PROFILE
+    );
+    return { primary, secondary, scored };
   }
 
   function resolveMoodWord(tokens, rng) {
@@ -190,123 +333,288 @@
     return pickFrom(["夜雨", "子夜", "风雪", "月下"], rng, "子夜");
   }
 
-  function resolvePromptObject(tokens, profile, rng) {
+  function resolvePromptObject(tokens, profile, secondaryProfile, rng) {
     for (const entry of OBJECT_HINTS) {
       if (includesKeyword(tokens, entry.keywords)) return entry.value;
     }
-    return pickFrom(profile.artifacts, rng, "密牒");
+    const pool = unique([...(profile.artifacts || []), ...((secondaryProfile?.artifacts) || [])]);
+    return pickFrom(pool, rng, "密牒");
   }
 
-  function resolveCaseTitle(tokens, profile, moodWord, rng) {
-    const directToken = tokens.find((token) => token.length >= 2 && token.length <= 4 && /[\u4e00-\u9fa5]/.test(token));
-    if (directToken && includesKeyword([directToken], profile.keywords)) {
-      const noun = pickFrom(profile.caseTitles, rng, "疑牒");
-      return `${moodWord}${noun}`;
+  function resolveCaseTitle(tokens, profile, secondaryProfile, moodWord, rng) {
+    const allThemeKeywords = THEME_PROFILES.flatMap((entry) => entry.keywords || []);
+    const landmarkKeywords = Object.values(LANDMARK_KEYWORDS).flat();
+    const objectKeywords = OBJECT_HINTS.flatMap((entry) => entry.keywords || []);
+    const routeKeywords = ROUTE_PATTERNS.flatMap((entry) => entry.keywords || []);
+    const specialToken = tokens.find((token) => token.length >= 2 && token.length <= 4 && /[\u4e00-\u9fa5]/.test(token)
+      && !includesKeyword([token], [
+        ...allThemeKeywords,
+        ...landmarkKeywords,
+        ...objectKeywords,
+        ...routeKeywords,
+        moodWord
+      ]));
+    if (specialToken && !specialToken.includes(moodWord) && !moodWord.includes(specialToken)) {
+      return `${moodWord}${specialToken}卷`;
     }
-    return `${moodWord}${pickFrom(profile.caseTitles, rng, "疑牒")}`;
+    const nouns = unique([...(profile.caseTitles || []), ...((secondaryProfile?.caseTitles) || [])]);
+    return `${moodWord}${pickFrom(nouns, rng, "疑牒")}`;
   }
 
   function resolveStoryLength(tokens) {
     let length = 5;
     if (tokens.length >= 4) length += 1;
-    if (includesKeyword(tokens, ["长篇", "完整", "史诗", "多站"])) length += 1;
+    if (includesKeyword(tokens, ["长篇", "完整", "史诗", "多站", "全轴"])) length += 1;
     if (includesKeyword(tokens, ["短篇", "轻量", "简短", "快速"])) length -= 1;
     return clamp(length, 4, 7);
   }
 
-  function findAnchorIndices(tokens, landmarks) {
+  function findAnchorIds(tokens, landmarks) {
     const anchors = [];
-    landmarks.forEach((landmark, index) => {
+    landmarks.forEach((landmark) => {
       const keywords = LANDMARK_KEYWORDS[landmark.id] || [landmark.name];
-      if (includesKeyword(tokens, keywords)) anchors.push(index);
+      if (includesKeyword(tokens, keywords)) anchors.push(landmark.id);
     });
-    return anchors;
+    return unique(anchors);
   }
 
-  function pickRoutePlan(landmarks, tokens, rng) {
-    const total = Array.isArray(landmarks) ? landmarks.length : 0;
-    if (!total) return [];
-    const desiredLength = resolveStoryLength(tokens);
-    const anchors = findAnchorIndices(tokens, landmarks);
+  function scoreRoutePattern(pattern, anchorIds, blueprint, tokens) {
+    let score = 0;
+    if (pattern.profiles.includes(blueprint.profile.id)) score += 5;
+    if (blueprint.secondaryProfile && pattern.profiles.includes(blueprint.secondaryProfile.id)) score += 3;
+    pattern.keywords.forEach((keyword) => {
+      if (includesKeyword(tokens, [keyword])) score += 1;
+    });
+    const anchorHits = anchorIds.filter((id) => pattern.sequence.includes(id)).length;
+    score += anchorHits * 3;
+    if (anchorIds.length && !anchorHits) score -= 4;
+    if (pattern.id === "grand_axis" && includesKeyword(tokens, ["全轴", "史诗", "长篇", "完整"])) score += 4;
+    if (pattern.id === "southern_lock" && includesKeyword(tokens, ["终局", "封阙", "天坛", "永定门"])) score += 3;
+    if (pattern.id === "court_core" && includesKeyword(tokens, ["宫廷", "内廷", "礼制"])) score += 2;
+    if (pattern.id === "shadow_run" && includesKeyword(tokens, ["追缉", "刺客", "潜逃", "夜行"])) score += 2;
+    return score;
+  }
+
+  function resolveRoutePattern(tokens, anchorIds, blueprint, rng) {
+    const scored = ROUTE_PATTERNS
+      .map((pattern) => ({ pattern, score: scoreRoutePattern(pattern, anchorIds, blueprint, tokens) }))
+      .sort((a, b) => b.score - a.score);
+    const top = scored[0];
+    if (!top || top.score < 0) return null;
+    const tied = scored.filter((entry) => entry.score === top.score).map((entry) => entry.pattern);
+    return pickFrom(tied, rng, top.pattern);
+  }
+
+  function fitRouteToLength(sequence, desiredLength, anchorIds, tokens, blueprint, rng) {
+    const cleanSequence = unique(sequence);
+    if (!cleanSequence.length) return [];
+    if (desiredLength >= cleanSequence.length) return cleanSequence;
+
+    const anchorPositions = anchorIds
+      .map((id) => cleanSequence.indexOf(id))
+      .filter((index) => index >= 0)
+      .sort((a, b) => a - b);
 
     let start = 0;
-    let end = desiredLength - 1;
+    const length = Math.min(desiredLength, cleanSequence.length);
 
-    if (anchors.length) {
-      const minAnchor = Math.min(...anchors);
-      const maxAnchor = Math.max(...anchors);
+    if (anchorPositions.length) {
+      const minAnchor = anchorPositions[0];
+      const maxAnchor = anchorPositions[anchorPositions.length - 1];
       const anchorSpan = maxAnchor - minAnchor + 1;
-      const length = Math.max(desiredLength, anchorSpan);
-      const extra = length - anchorSpan;
-      const leftRoom = Math.floor(extra / 2);
-      start = clamp(minAnchor - leftRoom, 0, Math.max(0, total - length));
-      end = clamp(start + length - 1, 0, total - 1);
-      start = Math.max(0, end - length + 1);
-    } else {
-      const maxStart = Math.max(0, total - desiredLength);
-      const preferredStart = includesKeyword(tokens, ["钟鼓楼", "北城", "追缉", "夜行", "宫廷", "夜雨"])
-        ? 0
-        : Math.floor((typeof rng === "function" ? rng() : Math.random()) * (maxStart + 1));
-      start = clamp(preferredStart, 0, maxStart);
-      end = start + desiredLength - 1;
+      const fittedLength = Math.max(length, anchorSpan);
+      const extra = fittedLength - anchorSpan;
+      start = clamp(minAnchor - Math.floor(extra / 2), 0, Math.max(0, cleanSequence.length - fittedLength));
+      return cleanSequence.slice(start, start + fittedLength);
     }
 
-    return landmarks.slice(start, end + 1).map((landmark) => landmark.id);
+    const maxStart = Math.max(0, cleanSequence.length - length);
+    let preferredStart = 0;
+    if (includesKeyword(tokens, ["终局", "封阙", "南城", "永定门", "圜丘"])) {
+      preferredStart = maxStart;
+    } else if (blueprint.profile.id === "intrigue") {
+      preferredStart = Math.floor(maxStart / 2);
+    } else if (blueprint.profile.id === "ritual") {
+      preferredStart = Math.max(0, maxStart - 1);
+    } else if (blueprint.profile.id === "legend" && maxStart > 0) {
+      preferredStart = Math.floor((typeof rng === "function" ? rng() : Math.random()) * (maxStart + 1));
+    }
+
+    start = clamp(preferredStart, 0, maxStart);
+    return cleanSequence.slice(start, start + length);
   }
 
-  function buildSubtitle(profile, artifact, rng) {
-    const template = pickFrom(profile.subtitleTemplates, rng, "沿中轴追查{artifact}的去向");
-    return template.replace(/\{artifact\}/g, artifact);
+  function pickRoutePlan(landmarks, tokens, blueprint, rng) {
+    if (!Array.isArray(landmarks) || !landmarks.length) return { routePlan: [], pattern: null };
+    const desiredLength = resolveStoryLength(tokens);
+    const anchorIds = findAnchorIds(tokens, landmarks);
+    const fallbackSequence = landmarks.map((landmark) => landmark.id);
+    const pattern = resolveRoutePattern(tokens, anchorIds, blueprint, rng);
+    const sequence = pattern?.sequence?.length ? pattern.sequence : fallbackSequence;
+    const routePlan = fitRouteToLength(sequence, desiredLength, anchorIds, tokens, blueprint, rng);
+    return {
+      routePlan: routePlan.length ? routePlan : fallbackSequence.slice(0, desiredLength),
+      pattern
+    };
   }
 
-  function buildRouteSummary(routeNames, blueprint) {
+  function buildBlendLine(blueprint) {
+    if (!blueprint.secondaryProfile || blueprint.secondaryProfile.id === blueprint.profile.id) {
+      return `本卷以${blueprint.profile.label}为骨。`;
+    }
+    return `本卷以${blueprint.profile.label}为骨，兼带${blueprint.secondaryProfile.label}气息。`;
+  }
+
+  function buildSubtitle(profile, secondaryProfile, artifact, rng) {
+    const templates = unique([...(profile.subtitleTemplates || []), ...((secondaryProfile?.subtitleTemplates) || [])]);
+    const template = pickFrom(templates, rng, "沿中轴追查{artifact}的去向");
+    const subtitle = template.replace(/\{artifact\}/g, artifact);
+    if (!secondaryProfile || secondaryProfile.id === profile.id) return subtitle;
+    return `${subtitle}，暗伏${secondaryProfile.label}之影`;
+  }
+
+  function buildRouteSummary(routeNames, blueprint, routePattern) {
     const startName = routeNames[0] || "起点";
     const endName = routeNames[routeNames.length - 1] || "终点";
-    return `${blueprint.villain}趁${blueprint.moodWord}之际${blueprint.incidentLine}，并试图让${blueprint.stake}。你需自${startName}起卷，沿 ${routeNames.join(" → ")} 逐站追查，在抵达${endName}前把整卷证据重新收束。`;
+    const patternLabel = routePattern?.label || "中轴追查";
+    const blendLine = buildBlendLine(blueprint).replace(/。$/, "");
+    return `${blueprint.villain}趁${blueprint.moodWord}之际${blueprint.incidentLine}，又试图${blueprint.coverStory}，让${blueprint.stake}。${blendLine}，这是一卷偏“${patternLabel}”的行进式调查。你需自${startName}起卷，沿 ${routeNames.join(" → ")} 逐站钉证，在抵达${endName}前拆明${blueprint.secret}背后真正的手脚。`;
   }
 
-  function buildOpening(routeNames, blueprint) {
+  function buildOpening(routeNames, blueprint, routePattern) {
     const first = routeNames[0] || "北阙";
     const final = routeNames[routeNames.length - 1] || "终门";
-    return `${blueprint.introTone} 今夜失踪的是“${blueprint.artifact}”，牵头之人疑为${blueprint.villain}。从${first}开始，你将顺着${routeNames.join("、")}一路南查；若不能在${final}前截住这条线，${blueprint.stake}。`;
+    const patternLabel = routePattern?.label || "中轴追查";
+    return `${blueprint.introTone} 今夜失踪的是“${blueprint.artifact}”，牵头之人疑为${blueprint.villain}。表面看去，这不过是一宗${patternLabel}式的追查；可真正在卷底浮出的，却是${blueprint.secret}与一层“${blueprint.coverStory}”的旧皮。你将自${first}起卷，顺着${routeNames.join("、")}一路逼近；若不能在${final}前合住整卷，${blueprint.stake}。`;
   }
 
-  function buildBeatText(landmark, base, index, routePlan, blueprint, getLandmarkById) {
+  function resolveChoiceStyles(blueprint, index) {
+    const primaryRotation = PROFILE_STYLE_ROTATIONS[blueprint.profile.id] || PROFILE_STYLE_ROTATIONS.suspense;
+    const secondaryRotation = PROFILE_STYLE_ROTATIONS[blueprint.secondaryProfile?.id || blueprint.profile.id] || primaryRotation;
+    const pairA = primaryRotation[index % primaryRotation.length];
+    const pairB = secondaryRotation[(index + 1) % secondaryRotation.length];
+    const c1 = pairA[0];
+    let c2 = pairB[1];
+    if (!c2 || c1 === c2) {
+      c2 = pairA[1] !== c1
+        ? pairA[1]
+        : ["order", "insight", "resolve"].find((item) => item !== c1) || "insight";
+    }
+    return { c1, c2 };
+  }
+
+  function decorateClue(baseClue, profileId, style, rng) {
+    const raw = String(baseClue || "").replace(/[「」]/g, "").trim();
+    const suffixPool = unique([
+      ...(THEME_CLUE_SUFFIXES[profileId] || []),
+      ...(STYLE_CLUE_SUFFIXES[style] || [])
+    ]);
+    const suffix = pickFrom(suffixPool, rng, "");
+    if (!raw || !suffix || raw.includes("·")) return raw || suffix;
+    return `${raw}·${suffix}`;
+  }
+
+  function buildGeneratedClues(base, blueprint, choiceStyles, rng) {
+    const seedClues = Array.isArray(base.clues) && base.clues.length
+      ? base.clues.slice(0, 2)
+      : [`${blueprint.artifact}线索甲`, `${blueprint.artifact}线索乙`];
+    while (seedClues.length < 2) seedClues.push(`${blueprint.artifact}线索${seedClues.length + 1}`);
+    return [
+      decorateClue(seedClues[0], blueprint.profile.id, choiceStyles.c1, rng),
+      decorateClue(seedClues[1], blueprint.secondaryProfile?.id || blueprint.profile.id, choiceStyles.c2, rng)
+    ];
+  }
+
+  function decorateOption(baseOption, style, rng) {
+    const raw = String(baseOption || "").replace(/[。！？]/g, "").trim();
+    const suffix = pickFrom(STYLE_OPTION_TAGS[style] || [], rng, "");
+    if (!raw) return suffix ? `核查线索·${suffix}` : "核查线索";
+    if (!suffix || raw.includes("·")) return raw;
+    return `${raw}·${suffix}`;
+  }
+
+  function buildGeneratedOptions(base, choiceStyles, rng) {
+    const seedOptions = Array.isArray(base.options) && base.options.length
+      ? base.options.slice(0, 2)
+      : ["先查旧迹", "先问行人"];
+    while (seedOptions.length < 2) seedOptions.push(seedOptions[0] || "先查旧迹");
+    return [
+      decorateOption(seedOptions[0], choiceStyles.c1, rng),
+      decorateOption(seedOptions[1], choiceStyles.c2, rng)
+    ];
+  }
+
+  function buildPhaseLabel(index) {
+    return PHASE_LABELS[Math.min(index, PHASE_LABELS.length - 1)] || `第${index + 1}站`;
+  }
+
+  function buildPhaseGoal(index) {
+    return PHASE_GOALS[Math.min(index, PHASE_GOALS.length - 1)] || "补齐关键证";
+  }
+
+  function buildBeatText(landmark, scene, index, routePlan, blueprint, getLandmarkById) {
     const nextId = routePlan[index + 1] || "";
     const nextName = nextId ? getLandmarkById(nextId)?.name || nextId : "";
-    const cluePair = Array.isArray(base.clues) && base.clues.length ? base.clues.join("、") : "本站线索";
+    const cluePair = Array.isArray(scene.clues) && scene.clues.length ? scene.clues.join("、") : "本站线索";
     const beatLabel = `【${BEAT_LABELS[Math.min(index, BEAT_LABELS.length - 1)]}】`;
     if (!nextName) {
-      return `${beatLabel}${landmark.name}是本卷最后一站。你已沿途收齐“${cluePair}”等关节证据，此刻必须据此压住${blueprint.artifact}背后的${blueprint.stake}，完成整卷封缄。`;
+      return `${beatLabel}${landmark.name}已是本卷最后一层关口。你沿途收束的“${cluePair}”终于把${blueprint.secret}与“${blueprint.artifact}”钉到同一张卷面上，此刻只差终门一封，便能压住${blueprint.stake}。`;
     }
-    return `${beatLabel}${landmark.name}一站掌着“${cluePair}”这组关键证词，它们会把${blueprint.artifact}的真实流向再逼近一步。待此站落卷后，你须立刻转往${nextName}续查。`;
+    return `${beatLabel}${landmark.name}掌着“${cluePair}”这组关键证词，它们会把${blueprint.secret}继续逼向明处。待此站落卷后，你须立刻转往${nextName}，免得${blueprint.villain}借下一站再覆一层假皮。`;
   }
 
-  function buildStageObjective(base, landmark, blueprint) {
-    const cluePair = Array.isArray(base.clues) && base.clues.length ? base.clues.join("与") : `${landmark.name}的两条线索`;
-    return `借${cluePair}核明${blueprint.artifact}在${landmark.name}留下的真实断点`;
+  function buildStageObjective(landmark, blueprint, clues, index) {
+    return `在${landmark.name}补齐「${clues[0]}」与「${clues[1]}」，${buildPhaseGoal(index)}，锁定${blueprint.artifact}的真实断点`;
   }
 
   function buildStageIntro(base, landmark, blueprint, index, routePlan, getLandmarkById) {
     const nextId = routePlan[index + 1] || "";
     const nextName = nextId ? getLandmarkById(nextId)?.name || nextId : "";
-    const stageText = nextName
-      ? `此站若核不清，下一步赶往${nextName}时便极可能被假迹牵走。`
-      : "此处已是终局前的最后一层关口，你带来的每一份证词都将在这里被重新合卷。";
-    return `${base.intro} 今卷所追的是“${blueprint.artifact}”，而${landmark.name}这一站偏偏握着最容易被${blueprint.villain}利用的一环。${stageText}`;
+    const blendHint = blueprint.secondaryProfile && blueprint.secondaryProfile.id !== blueprint.profile.id
+      ? `这卷虽以${blueprint.profile.label}为主，却始终带着${blueprint.secondaryProfile.label}的阴影。`
+      : `这一站延续着${blueprint.profile.label}的压迫感。`;
+    const pressure = nextName
+      ? `若此站核不清，通往${nextName}的证链就会被对方继续改写。`
+      : "此处已是终局前最后一层缝口，你带来的每一份证词都将在这里被重新合卷。";
+    return `【${buildPhaseLabel(index)}】${base.intro} ${blendHint}${landmark.name}这一站牵着${blueprint.secret}，而${blueprint.villain}正试图${blueprint.coverStory}。${pressure}`;
   }
 
-  function buildStageReport(base, landmark, blueprint) {
-    return `${base.report} 另需说明${landmark.name}这一站的证词，如何与“${blueprint.artifact}”以及${blueprint.villain}留下的手脚彼此对应。`;
+  function buildStageReport(base, landmark, blueprint, clues) {
+    return `${base.report} 此次上呈需特别说明「${clues[0]}」与「${clues[1]}」如何彼此互证，以及它们如何揭开${landmark.name}这一站所藏的${blueprint.secret}。`;
   }
 
-  function buildStageBridge(base, landmark, blueprint, index, routePlan, getLandmarkById) {
+  function buildStageBridge(landmark, blueprint, index, routePlan, getLandmarkById, routePattern) {
     const nextId = routePlan[index + 1] || "";
     const nextName = nextId ? getLandmarkById(nextId)?.name || nextId : "";
     if (!nextName) {
-      return `${landmark.name}的最后一块拼图已归入卷中。至此，“${blueprint.artifact}”的去向与${blueprint.villain}的布置都已明朗，你只待在终门处合卷封缄。`;
+      return `${landmark.name}这一站的两条证脉都已归卷，“${blueprint.artifact}”、${blueprint.secret}与${blueprint.villain}的去向终于并到一处。剩下的，只是把整夜散乱的桥、门、坛、殿、城当场封缄。`;
     }
-    return `${landmark.name}这一站的证词已被你重新钉牢，但你也已看清，这不过是${blueprint.villain}布下的一段中继线。若想继续逼近“${blueprint.artifact}”的下落，下一站必须直取${nextName}。`;
+    const patternLabel = routePattern?.label || "中轴线";
+    return `${landmark.name}这一站的证脉已被你重新钉牢，${blueprint.villain}借以遮面的“${blueprint.coverStory}”也被拆去一层。下一步必须直趋${nextName}，继续沿${patternLabel}把“${blueprint.artifact}”从暗处逼出来。`;
+  }
+
+  function buildChoiceResult(landmark, clue, style, blueprint, index, routePlan, getLandmarkById, rng) {
+    const nextId = routePlan[index + 1] || "";
+    const nextName = nextId ? getLandmarkById(nextId)?.name || nextId : "";
+    const lead = pickFrom(STYLE_RESULT_LEADS[style] || [], rng, "你先抓住了这一站的要害。");
+    const closing = nextName
+      ? pickFrom([
+        `这也让通往${nextName}的下一段证链更清楚了。`,
+        `原本会在${nextName}被继续利用的那道缝，先一步被你照了出来。`,
+        `你由此抢到了转往${nextName}之前最关键的半步。`
+      ], rng, `这也让通往${nextName}的下一段证链更清楚了。`)
+      : pickFrom([
+        "终卷所需的最后一证因此归位。",
+        "整夜散乱的线头终于在这里并拢。",
+        "封阙前最后一层伪装也被你拆开了。"
+      ], rng, "终卷所需的最后一证因此归位。");
+    return `${lead} 你先从「${clue}」下手，${landmark.name}这一站最适合被${blueprint.villain}利用的缝隙因此露了出来。${closing}`;
+  }
+
+  function buildRouteNote(landmark, clues, index, routePlan, getLandmarkById) {
+    const nextId = routePlan[index + 1] || "";
+    const nextName = nextId ? getLandmarkById(nextId)?.name || nextId : "";
+    return `${buildPhaseLabel(index)}：补齐${clues.join("、")}${nextName ? `，续压${nextName}` : "，准备终卷封缄"}`;
   }
 
   function buildChapterTitle(base, index) {
@@ -315,26 +623,55 @@
   }
 
   function buildBlueprint(tokens, rng) {
-    const profile = resolveThemeProfile(tokens, rng);
+    const themeBlend = resolveThemeBlend(tokens, rng);
+    const profile = themeBlend.primary;
+    const secondaryProfile = themeBlend.secondary;
     const moodWord = resolveMoodWord(tokens, rng);
-    const artifact = resolvePromptObject(tokens, profile, rng);
-    const incidentTemplate = pickFrom(profile.incidentTemplates, rng, "调包了{artifact}");
-    const villain = pickFrom(profile.villains, rng, "黑灯贼子");
-    const stake = pickFrom(profile.stakes, rng, "中轴秩序会被彻底改写");
+    const artifact = resolvePromptObject(tokens, profile, secondaryProfile, rng);
+    const incidentTemplate = pickFrom(
+      unique([...(profile.incidentTemplates || []), ...((secondaryProfile?.incidentTemplates) || [])]),
+      rng,
+      "调包了{artifact}"
+    );
+    const villain = pickFrom(
+      unique([...(profile.villains || []), ...((secondaryProfile?.villains) || [])]),
+      rng,
+      "黑灯贼子"
+    );
+    const stake = pickFrom(
+      unique([...(profile.stakes || []), ...((secondaryProfile?.stakes) || [])]),
+      rng,
+      "中轴秩序会被彻底改写"
+    );
+    const secret = pickFrom(
+      unique([...(PROFILE_SECRETS[profile.id] || []), ...((PROFILE_SECRETS[secondaryProfile?.id] || []).slice(0, 2))]),
+      rng,
+      "一条被改写的交接记号"
+    );
+    const coverStory = pickFrom(
+      unique([...(PROFILE_COVER_STORIES[profile.id] || []), ...((PROFILE_COVER_STORIES[secondaryProfile?.id] || []).slice(0, 2))]),
+      rng,
+      "把真证藏进假线索里"
+    );
     return {
       profile,
+      secondaryProfile,
       moodWord,
       artifact,
       incidentLine: incidentTemplate.replace(/\{artifact\}/g, artifact),
       villain,
       stake,
-      title: resolveCaseTitle(tokens, profile, moodWord, rng),
-      subtitle: buildSubtitle(profile, artifact, rng),
-      introTone: profile.introTone
+      secret,
+      coverStory,
+      title: resolveCaseTitle(tokens, profile, secondaryProfile, moodWord, rng),
+      subtitle: buildSubtitle(profile, secondaryProfile, artifact, rng),
+      introTone: profile.introTone,
+      blendLine: buildBlendLine({ profile, secondaryProfile })
     };
   }
 
   function buildGeneratedScriptFromPrompt(promptText, context) {
+    const normalizedPrompt = String(promptText || "").trim();
     const landmarks = Array.isArray(context?.landmarks) ? context.landmarks : [];
     const sceneTemplatePool = context?.sceneTemplates && typeof context.sceneTemplates === "object"
       ? context.sceneTemplates
@@ -346,15 +683,19 @@
         || { id: "unknown", name: "未知地点", persona: "引路人" };
 
     if (!landmarks.length) return null;
+    if (!normalizedPrompt) return null;
 
-    const tokens = tokenizePrompt(promptText);
-    const rng = createRng(`${promptText || "cityquest"}|${landmarks.length}`);
+    const tokens = tokenizePrompt(normalizedPrompt);
+    const rng = createRng(`${normalizedPrompt}|${landmarks.length}`);
     const blueprint = buildBlueprint(tokens, rng);
-    const routePlan = pickRoutePlan(landmarks, tokens, rng);
+    const routeSelection = pickRoutePlan(landmarks, tokens, blueprint, rng);
+    const routePlan = routeSelection.routePlan;
+    const routePattern = routeSelection.pattern;
     if (!routePlan.length) return null;
 
     const sceneTemplates = {};
     const beats = {};
+    const routeNotes = {};
 
     routePlan.forEach((landmarkId, index) => {
       const landmark = getLandmarkById(landmarkId);
@@ -369,38 +710,56 @@
         bridge: "本站线索暂明。"
       };
 
+      const choiceStyles = resolveChoiceStyles(blueprint, index);
+      const clues = buildGeneratedClues(base, blueprint, choiceStyles, rng);
+      const options = buildGeneratedOptions(base, choiceStyles, rng);
+      const routeNote = buildRouteNote(landmark, clues, index, routePlan, getLandmarkById);
+
       sceneTemplates[landmarkId] = {
         ...base,
         title: buildChapterTitle(base, index),
-        objective: buildStageObjective(base, landmark, blueprint),
+        objective: buildStageObjective(landmark, blueprint, clues, index),
         intro: buildStageIntro(base, landmark, blueprint, index, routePlan, getLandmarkById),
-        options: Array.isArray(base.options) && base.options.length ? [...base.options] : ["先查旧迹", "先问行人"],
-        clues: Array.isArray(base.clues) && base.clues.length ? [...base.clues] : [`${landmark.name}线索甲`, `${landmark.name}线索乙`],
-        report: buildStageReport(base, landmark, blueprint),
+        options,
+        clues,
+        report: buildStageReport(base, landmark, blueprint, clues),
         unlock: base.unlock || "本站线索已齐，可验其地。",
-        bridge: buildStageBridge(base, landmark, blueprint, index, routePlan, getLandmarkById)
+        bridge: buildStageBridge(landmark, blueprint, index, routePlan, getLandmarkById, routePattern),
+        routeNote,
+        choiceStyles,
+        choiceResults: {
+          c1: buildChoiceResult(landmark, clues[0], choiceStyles.c1, blueprint, index, routePlan, getLandmarkById, rng),
+          c2: buildChoiceResult(landmark, clues[1], choiceStyles.c2, blueprint, index, routePlan, getLandmarkById, rng)
+        }
       };
 
+      routeNotes[landmarkId] = routeNote;
       beats[landmarkId] = buildBeatText(landmark, sceneTemplates[landmarkId], index, routePlan, blueprint, getLandmarkById);
     });
 
     const routeNames = routePlan.map((id) => getLandmarkById(id).name);
 
     return {
-      id: `generated_${createSeed(`${promptText}|${routePlan.join(",")}`)}`,
+      id: `generated_${createSeed(`${normalizedPrompt}|${routePlan.join(",")}`)}`,
       name: blueprint.title,
       subtitle: blueprint.subtitle,
-      summary: buildRouteSummary(routeNames, blueprint),
-      opening: buildOpening(routeNames, blueprint),
-      promptText: promptText || "",
+      summary: buildRouteSummary(routeNames, blueprint, routePattern),
+      opening: buildOpening(routeNames, blueprint, routePattern),
+      promptText: normalizedPrompt,
       routePlan,
+      routeNotes,
       sceneTemplates,
       beats,
       meta: {
         theme: blueprint.profile.id,
+        secondaryTheme: blueprint.secondaryProfile?.id || "",
         artifact: blueprint.artifact,
         villain: blueprint.villain,
-        mood: blueprint.moodWord
+        mood: blueprint.moodWord,
+        secret: blueprint.secret,
+        blendLine: blueprint.blendLine,
+        routePatternId: routePattern?.id || "default",
+        routePatternLabel: routePattern?.label || "中轴追查"
       }
     };
   }
